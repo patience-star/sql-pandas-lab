@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>数析实验室 · SQL × pandas</title>
+<meta name="description" content="日常数据分析必备的 SQL 与 pandas：分模块讲解、可视化演示、浏览器内直接运行代码、业务场景实战练习。">
+<meta name="theme-color" content="#4f5bd5">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f5bd5'/%3E%3Cpath d='M8 22V14M14 22V9M20 22v-6M26 22V12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem('sqlpd-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="打开目录">
+    <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="brand" href="#/">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M8 22V14M14 22V9M20 22v-6M26 22V12"/></svg>
+    <span><b>数析实验室</b><small>SQL × pandas</small></span>
+  </a>
+  <nav class="tabs" id="tabs">
+    <a href="#/sql" data-k="sql">SQL</a>
+    <a href="#/pandas" data-k="pandas">pandas</a>
+    <a href="#/case" data-k="case">业务实战</a>
+    <a href="#/data" data-k="data">数据集</a>
+    <a href="#/cheatsheet" data-k="cheatsheet">速查表</a>
+  </nav>
+  <button class="engine" id="engine" title="Python 运行环境"></button>
+  <button class="icon-btn" id="themeBtn" aria-label="切换深浅色">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+  </button>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="课程目录"></aside>
+  <div class="scrim" id="scrim"></div>
+  <main id="main"></main>
+</div>
+<script src="vendor/codemirror/codemirror.js"></script>
+<script src="vendor/codemirror/sql.js"></script>
+<script src="vendor/codemirror/python.js"></script>
+<script src="vendor/codemirror/matchbrackets.js"></script>
+<script src="vendor/codemirror/runmode.js"></script>
+<script src="vendor/sqljs/sql-wasm.js"></script>
+<script src="content/sql.js"></script>
+<script src="content/pandas.js"></script>
+<script src="content/cases.js"></script>
+<script src="assets/viz.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
