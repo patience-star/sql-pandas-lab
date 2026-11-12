@@ -1,5 +1,9 @@
 # 数析实验室 · SQL × pandas
 
+### 👉 在线访问：**[https://patience-star.github.io/sql-pandas-lab/](https://patience-star.github.io/sql-pandas-lab/)**
+
+电脑、手机浏览器直接打开即可学习和运行代码，无需安装任何软件。
+
 日常数据分析必备的 SQL 与 pandas 学习站：分模块讲解 + 可视化动画 + 浏览器内直接运行代码 + 自动判题 + 业务场景实战。电脑、手机都能用，纯静态页面，部署在 GitHub Pages。
 
 - **SQL 8 课**：查询基础、聚合分组、JOIN、CASE WHEN、子查询与 CTE、窗口函数、日期与字符串函数（附 MySQL 对照）、NULL 与常见陷阱
