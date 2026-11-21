@@ -198,7 +198,7 @@ ORDER BY 年龄段;</textarea>
        ROUND(SUM(CASE WHEN o.status = '已退款' THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 4) AS 退款率
 FROM orders o JOIN products p ON o.product_id = p.product_id
 GROUP BY p.category;</textarea>
-<div class="warn"><b>整数除法陷阱：</b>SQLite（以及 Hive 的部分写法、SQL Server）中 <code>3 / 4 = 0</code>！整数相除结果会截断。计算比率时先 <code>* 1.0</code> 转成小数。MySQL 的 <code>/</code> 会自动返回小数，但 <code>DIV</code> 是整除。</div>
+<div class="warn"><b>整数除法陷阱：</b>SQLite（以及 Hive 的部分写法、SQL Server）中 <code>3 / 4 = 0</code>，整数相除结果会截断。计算比率时先 <code>* 1.0</code> 转成小数。MySQL 的 <code>/</code> 会自动返回小数，但 <code>DIV</code> 是整除。</div>
 <textarea data-run="sql">SELECT 3 / 4 AS 整数除法, 3 * 1.0 / 4 AS 小数除法;</textarea>
 
 <h2>行转列</h2>

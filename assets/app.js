@@ -6,17 +6,23 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
+// 线条图标（lucide 风格，16px，描边 1.5）
+const svg = d => `<svg class="ico" viewBox="0 0 24 24">${d}</svg>`;
 const ICON = {
-  play: svg('<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>'),
+  play: svg('<path d="M7 4.5v15l12-7.5z"/>'),
   check: svg('<path d="M4 12.5l5 5L20 6.5"/>'),
+  x: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  home: svg('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+  db: svg('<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
+  list: svg('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),
+  circleCheck: svg('<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>'),
   reset: svg('<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/>'),
   bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
   eye: svg('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
   copy: svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'),
   run: svg('<path d="M13 3L4 14h7l-1 7 9-11h-7z"/>'),
   chart: svg('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
-  play2: svg('<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>'),
+  play2: svg('<path d="M7 4.5v15l12-7.5z"/>'),
   pause: svg('<path d="M8 5v14M16 5v14"/>'),
   prev: svg('<path d="M15 5l-7 7 7 7"/>'),
   next: svg('<path d="M9 5l7 7-7 7"/>'),
@@ -25,11 +31,11 @@ const ICON = {
 
 const TRACKS = {
   sql: { key: 'sql', name: 'SQL', full: 'SQL 必备', lang: 'sql', items: COURSE.sql,
-    desc: '从查询、过滤、聚合到多表连接与窗口函数，覆盖取数分析 90% 的日常写法。' },
+    desc: '查询、过滤、聚合、多表连接、窗口函数——从数据库里取数时最常写的语句。' },
   pandas: { key: 'pandas', name: 'pandas', full: 'pandas 必备', lang: 'py', items: COURSE.pandas,
     desc: '读取、筛选、清洗、分组、合并、透视、时间序列——Python 数据分析的核心工具箱。' },
   case: { key: 'case', name: '业务实战', full: '业务场景实战', lang: 'sql', items: COURSE.cases,
-    desc: 'DAU、留存、漏斗、复购、RFM、TopN……面试与工作中最高频的分析题，SQL 与 pandas 双解法。' },
+    desc: 'DAU、留存、漏斗、复购、RFM、TopN……面试与工作中常见的分析题，SQL 与 pandas 双解法。' },
 };
 const TABLES = ['users', 'products', 'orders', 'events', 'logins', 'users_raw'];
 
@@ -325,7 +331,7 @@ function resultHTML(r, lang) {
   if (r.out) h += `<pre class="stdout">${esc(r.out)}</pre>`;
   if (r.err) {
     const e = r.err;
-    return h + `<div class="error-box"><b>${esc(e.type)}</b><code>${esc(e.msg)}</code>${e.where ? `<div><code>${esc(e.where)}</code></div>` : ''}${e.hint ? `<div class="hint">💡 ${esc(e.hint)}</div>` : ''}</div>`;
+    return h + `<div class="error-box"><b>${esc(e.type)}</b><code>${esc(e.msg)}</code>${e.where ? `<div><code>${esc(e.where)}</code></div>` : ''}${e.hint ? `<div class="hint">${ICON.bulb}<span>${esc(e.hint)}</span></div>` : ''}</div>`;
   }
   if (r.kind === 'table') {
     const nul = lang === 'py' ? '<span class="nul">NaN</span>' : null;
@@ -359,7 +365,7 @@ function makeRunner(host, { lang, code, chart, ex, exId, onPass }) {
       <button class="btn ghost" data-a="answer">${ICON.eye}<span class="t">答案</span></button>` : ''}
       <button class="btn ghost" data-a="reset" title="恢复初始代码">${ICON.reset}<span class="t">重置</span></button>
       <button class="btn ${ex ? '' : 'primary'}" data-a="run" title="Ctrl/⌘ + Enter">${ICON.play}运行</button>
-      ${ex ? `<button class="btn success" data-a="check">${ICON.check}提交</button>` : ''}
+      ${ex ? `<button class="btn primary" data-a="check">${ICON.check}提交</button>` : ''}
     </div>
     <div class="editor"></div><div class="extra"></div><div class="output"></div>`;
   const out = $('.output', host), extra = $('.extra', host);
@@ -393,7 +399,7 @@ function makeRunner(host, { lang, code, chart, ex, exId, onPass }) {
     if (isCheck && verdictEl) {
       const v = r.err ? { pass: false, msg: '代码运行出错了，先修正上面的错误。' } : r.verdict;
       verdictEl.className = 'verdict ' + (v.pass ? 'pass' : 'fail');
-      verdictEl.textContent = v.pass ? '✅ 回答正确！结果与参考答案一致。' : '❌ ' + v.msg;
+      verdictEl.innerHTML = v.pass ? `${ICON.circleCheck}<span>回答正确，结果与参考答案一致</span>` : `${ICON.x}<span>${esc(v.msg)}</span>`;
       if (v.pass) onPass?.();
     }
     btns.forEach(b => (b.disabled = false));
@@ -404,7 +410,7 @@ function makeRunner(host, { lang, code, chart, ex, exId, onPass }) {
     if (a === 'run') go(false);
     else if (a === 'check') go(true);
     else if (a === 'reset') { cm.setValue(code); out.innerHTML = ''; }
-    else if (a === 'hint') { extra.innerHTML = extra.dataset.v === 'hint' ? '' : `<p class="hint-text">💡 ${ex.hint || '回顾本课讲解中的示例，思路是一样的。'}</p>`; extra.dataset.v = extra.innerHTML ? 'hint' : ''; }
+    else if (a === 'hint') { extra.innerHTML = extra.dataset.v === 'hint' ? '' : `<p class="hint-text">${ICON.bulb}<span>${ex.hint || '回顾本课讲解中的示例，思路是一样的。'}</span></p>`; extra.dataset.v = extra.innerHTML ? 'hint' : ''; }
     else if (a === 'answer') {
       if (extra.dataset.v === 'ans') { extra.innerHTML = ''; extra.dataset.v = ''; return; }
       extra.innerHTML = ''; extra.append(highlight(ex.sol, lang));
@@ -441,61 +447,70 @@ function renderSidebar(cur) {
     const items = T.items.map((L, i) => {
       const lp = lessonProgress(L);
       const st = lp.n && lp.d === lp.n ? 'full' : lp.d ? 'part' : '';
-      return `<a class="nav-item ${st} ${cur === L.id ? 'on' : ''}" href="#/${T.key}/${L.id}"><span class="num">${lp.n && lp.d === lp.n ? '✓' : i + 1}</span>${esc(L.title)}</a>`;
+      return `<a class="nav-item ${st} ${cur === L.id ? 'on' : ''}" href="#/${T.key}/${L.id}"><span class="num">${lp.n && lp.d === lp.n ? ICON.check : i + 1}</span>${esc(L.title)}</a>`;
     }).join('');
     const open = cur && T.items.some(L => L.id === cur) || cur === T.key;
-    return `<details class="nav-group t-${T.key}" ${open ? 'open' : ''}><summary><span class="dot" style="background:var(--c)"></span>${T.full}<span class="count">${p.d}/${p.n}</span></summary>${items}</details>`;
+    return `<details class="nav-group t-${T.key}" ${open ? 'open' : ''}><summary><span class="dot"></span>${T.full}<span class="count">${p.d}/${p.n}</span></summary>${items}</details>`;
   }).join('');
   sidebar.innerHTML = groups + `<div class="nav-links">
-    <a class="nav-item ${cur === 'home' ? 'on' : ''}" href="#/"><span class="num">⌂</span>首页</a>
-    <a class="nav-item ${cur === 'data' ? 'on' : ''}" href="#/data"><span class="num">⛁</span>数据集 & 自由练习</a>
-    <a class="nav-item ${cur === 'cheatsheet' ? 'on' : ''}" href="#/cheatsheet"><span class="num">≡</span>SQL ↔ pandas 速查表</a></div>`;
+    <a class="nav-item ${cur === 'home' ? 'on' : ''}" href="#/"><span class="num">${ICON.home}</span>首页</a>
+    <a class="nav-item ${cur === 'data' ? 'on' : ''}" href="#/data"><span class="num">${ICON.db}</span>数据集与自由练习</a>
+    <a class="nav-item ${cur === 'cheatsheet' ? 'on' : ''}" href="#/cheatsheet"><span class="num">${ICON.list}</span>SQL ↔ pandas 速查表</a></div>`;
 }
 
+// 首页右侧示例的结果：来自数据集 users 表的真实统计（SELECT city, COUNT(*) … ORDER BY 2 DESC）
+const CITY_COUNTS = [['上海', 58], ['北京', 54], ['广州', 41], ['深圳', 38], ['杭州', 34], ['武汉', 27]];
 function pageHome() {
-  const card = T => {
+  const row = T => {
     const p = trackProgress(T);
     const pct = p.n ? Math.round(p.d / p.n * 100) : 0;
-    return `<a class="card track-card t-${T.key}" href="#/${T.key}">
-      <h3>${T.full}</h3><p>${T.desc}</p>
-      <div class="chips">${T.items.slice(0, 6).map(L => `<span>${esc(L.title)}</span>`).join('')}${T.items.length > 6 ? `<span>+${T.items.length - 6}</span>` : ''}</div>
-      <div class="progress-label"><span>${T.items.length} 个模块 · ${p.n} 道练习</span><span>${pct}%</span></div>
-      <div class="progress"><i style="width:${pct}%"></i></div></a>`;
+    return `<a class="track-row t-${T.key}" href="#/${T.key}">
+      <div><h3><span class="dot"></span>${T.full}</h3><p>${T.desc}</p>
+        <p class="lessons">${T.items.map(L => esc(L.title)).join(' · ')}</p></div>
+      <div class="side"><span class="meta"><span>${T.items.length} 课 · ${p.n} 道练习</span><span>${pct}%</span></span>
+        <div class="progress"><i style="width:${pct}%"></i></div></div></a>`;
   };
-  const feat = (t, ico, h, p) => `<div class="card feature t-${t}"><div class="ico">${ico}</div><h4>${h}</h4><p>${p}</p></div>`;
-  return `<div class="page wide">
+  const feat = (ico, h, p) => `<div class="feature">${ico}<h4>${h}</h4><p>${p}</p></div>`;
+  const max = CITY_COUNTS[0][1];
+  return `<div class="page wide home">
     <section class="hero">
       <div>
-        <h1>在浏览器里学会<br><em>SQL 与 pandas</em></h1>
-        <p>只讲日常数据分析最常用的知识。每个概念配可视化动画，每段代码都能直接运行，再用真实业务场景题把它们串起来——电脑、手机都能练。</p>
-        <div class="cta"><a class="btn big primary" href="#/sql/s1">从 SQL 开始</a><a class="btn big py" href="#/pandas/p1">从 pandas 开始</a><a class="btn big" href="#/case">业务实战</a></div>
+        <h1>SQL 与 pandas，<br>一步一步练熟</h1>
+        <p>16 节课只讲日常数据分析最常用的写法。每个概念配分步动画，每段代码都能在浏览器里直接运行，再用留存、漏斗、复购等 10 道业务题把它们串起来。</p>
+        <div class="cta"><a class="btn big primary" href="#/sql/s1">从 SQL 开始</a><a class="btn big" href="#/pandas/p1">从 pandas 开始</a></div>
       </div>
-      <div class="duo">
-        <div><span class="lbl" style="color:var(--sql)">SQL</span><pre class="cm-s-default" id="duoSql"></pre></div>
-        <div class="equal">⇅ 同一个问题，两种写法</div>
-        <div><span class="lbl" style="color:var(--py)">pandas</span><pre class="cm-s-default" id="duoPy"></pre></div>
-      </div>
+      <figure class="demo" aria-label="同一个问题的 SQL 与 pandas 两种写法">
+        <figcaption class="demo-head"><span>每个城市有多少用户？</span><span class="meta">users · 300 行</span></figcaption>
+        <div class="demo-code">
+          <div class="t-sql"><span class="demo-lang"><span class="dot"></span>SQL</span><pre class="cm-s-default" id="duoSql"></pre></div>
+          <div class="t-py"><span class="demo-lang"><span class="dot"></span>pandas</span><pre class="cm-s-default" id="duoPy"></pre></div>
+        </div>
+        <div class="demo-result">
+          <div class="demo-cap"><span>${ICON.circleCheck}两种写法，同一个结果</span><span class="meta">8 行 · 显示前 6 行</span></div>
+          <ol class="demo-bars">${CITY_COUNTS.map(([c, n], i) => `<li class="${i ? '' : 'top'}"><span>${c}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span><span class="v">${n}</span></li>`).join('')}</ol>
+        </div>
+      </figure>
     </section>
-    <h2>三条学习路径</h2>
-    <div class="tracks">${Object.values(TRACKS).map(card).join('')}</div>
-    <h2>建议学习顺序</h2>
-    <div class="route">
-      <div class="t-sql"><b>SQL 基础 8 课</b><span>先学会“取数”：查询、聚合、连接、窗口函数，是所有分析岗位的基本功。</span></div>
-      <div class="t-pandas"><b>pandas 基础 8 课</b><span>再学“加工”：清洗、分组、合并、透视，处理 SQL 不方便做的灵活分析。</span></div>
-      <div class="t-case"><b>业务实战 10 题</b><span>最后“解决问题”：留存、漏斗、复购、RFM，每题都有 SQL 与 pandas 两种解法。</span></div>
-    </div>
-    <h2>这里有什么</h2>
-    <div class="features">
-      ${feat('sql', ICON.run, '浏览器内直接运行', 'SQL 由 SQLite（WebAssembly）执行，pandas 由 Pyodide 执行，无需安装任何软件，手机也能跑。')}
-      ${feat('pandas', ICON.chart, '可视化动画讲解', 'JOIN 怎么匹配、GROUP BY 怎么分组、窗口怎么滑动……一步一步看清楚每个操作对数据做了什么。')}
-      ${feat('case', ICON.check, '自动判题 + 进度记录', '每课都有练习，提交后自动和参考答案比对结果；完成进度保存在本机浏览器里。')}
-    </div>
-    <div class="footer"><span>数据集为模拟的电商数据（300 用户 · 半年订单），可随意练习。</span><span><a href="#/data">查看数据集</a> · <a href="#/cheatsheet">速查表</a> · <a href="#/selftest">自测</a></span></div>
+    <section><h2>三条学习路径</h2>
+      <div class="tracks">${Object.values(TRACKS).map(row).join('')}</div></section>
+    <section><h2>建议学习顺序</h2>
+      <div class="route">
+        <div><b>SQL 基础 8 课</b><span>先学会“取数”：查询、聚合、连接、窗口函数，是所有分析岗位的基本功。</span></div>
+        <div><b>pandas 基础 8 课</b><span>再学“加工”：清洗、分组、合并、透视，处理 SQL 不方便做的灵活分析。</span></div>
+        <div><b>业务实战 10 题</b><span>最后“解决问题”：留存、漏斗、复购、RFM，每题都有 SQL 与 pandas 两种解法。</span></div>
+      </div></section>
+    <section><h2>每节课怎么学</h2>
+      <div class="features">
+        ${feat(ICON.play, '在浏览器里直接运行', 'SQL 由 SQLite（WebAssembly）执行，pandas 由 Pyodide 执行，不用安装任何软件，手机也能跑。')}
+        ${feat(ICON.chart, '分步动画讲解', 'JOIN 怎么匹配、GROUP BY 怎么分组、窗口怎么滑动，一步一步看清每个操作对数据做了什么。')}
+        ${feat(ICON.check, '自动判题与进度', '每课都有练习，提交后和参考答案比对结果；完成进度保存在本机浏览器里。')}
+      </div></section>
+    <div class="footer"><span>数据集为模拟的电商数据：300 个用户，2024 年上半年的订单</span><span><a href="#/data">查看数据集</a> · <a href="#/cheatsheet">速查表</a> · <a href="#/selftest">自测</a></span></div>
   </div>`;
 }
 function afterHome() {
   CodeMirror.runMode(`SELECT city, COUNT(*) AS 用户数\nFROM users\nGROUP BY city\nORDER BY 用户数 DESC;`, 'text/x-sqlite', $('#duoSql'));
-  CodeMirror.runMode(`(users.groupby('city')\n      .size()\n      .sort_values(ascending=False))`, 'python', $('#duoPy'));
+  CodeMirror.runMode(`(users.groupby('city')\n      .size()\n      .sort_values(\n          ascending=False))`, 'python', $('#duoPy'));
 }
 
 function pageTrack(T) {
@@ -535,7 +550,7 @@ function afterLesson(T, idx) {
     const box = document.createElement('div');
     box.className = `exercise t-${lang} ${DONE[key] ? 'done' : ''}`;
     box.id = 'ex-' + key;
-    box.innerHTML = `<div class="ex-head"><span class="ex-num">练习 ${i + 1}</span><span class="badge">${lang === 'sql' ? 'SQL' : 'pandas'}</span>${ex.ordered ? '<span class="badge">需按要求排序</span>' : ''}<span class="badge ok" ${DONE[key] ? '' : 'hidden'}>✓ 已完成</span></div>
+    box.innerHTML = `<div class="ex-head"><span class="ex-num">练习 ${i + 1}</span><span class="badge">${lang === 'sql' ? 'SQL' : 'pandas'}</span>${ex.ordered ? '<span class="badge">需按要求排序</span>' : ''}<span class="badge ok" ${DONE[key] ? '' : 'hidden'}>${ICON.check}已完成</span></div>
       <div class="ex-q">${ex.q}</div><div class="rh"></div><div class="verdict"></div>`;
     list.append(box);
     const starter = ex.starter ?? (lang === 'sql' ? '-- 在这里写 SQL\n' : '# 把最终答案赋值给 result\nresult = ');
@@ -563,7 +578,7 @@ const TABLE_INFO = {
 const TABLE_ROWS = { users: 300, products: 40, orders: 1332, events: 2041, logins: 5564, users_raw: 43 };
 function pageData() {
   return `<div class="page wide t-sql">
-    <div class="lesson-head"><div class="crumb"><span class="pill">数据集</span></div><h1>数据集 & 自由练习</h1>
+    <div class="lesson-head"><div class="crumb"><span class="pill">数据集</span></div><h1>数据集与自由练习</h1>
     <p class="sub">一个模拟电商的 6 张表，所有课程和练习都基于它。SQL 中直接用表名查询；pandas 中已预先读入同名 DataFrame（日期列已解析为日期类型）。点击表卡片可预览数据。</p></div>
     <div class="schema">${TABLES.map(t => {
       const [cn, d, cols] = TABLE_INFO[t];

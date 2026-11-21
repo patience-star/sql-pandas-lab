@@ -14,7 +14,7 @@ function mini(cols, rows, o = {}) {
 const col = (label, html) => `<div class="viz-col"><span class="lbl">${label}</span>${html}</div>`;
 const row = (...parts) => `<div class="viz-row">${parts.join('')}</div>`;
 const arrow = (t = '→') => `<span class="arrow">${t}</span>`;
-const code2 = (sql, py) => `<pre class="qcode">${sql ? `<span style="color:var(--sql)">SQL   </span>${vesc(sql)}` : ''}${sql && py ? '\n' : ''}${py ? `<span style="color:var(--py)">pandas</span> ${vesc(py)}` : ''}</pre>`;
+const code2 = (sql, py) => `<pre class="qcode">${sql ? `<span style="color:var(--faint)">SQL   </span>${vesc(sql)}` : ''}${sql && py ? '\n' : ''}${py ? `<span style="color:var(--faint)">pandas</span> ${vesc(py)}` : ''}</pre>`;
 const pct = v => (v * 100).toFixed(1) + '%';
 
 function frame(el, title, tag, cls) {
@@ -23,7 +23,7 @@ function frame(el, title, tag, cls) {
   return { stage: el.querySelector('.viz-stage'), cap: el.querySelector('.viz-cap'), ctrl: el.querySelector('.viz-ctrl'), cnt: el.querySelector('.viz-cnt, .cnt') };
 }
 function modeOf(d, def = 'sql') { return (d && d.mode) || def; }
-const tagOf = m => (m === 'py' ? 'PANDAS' : m === 'both' ? 'SQL · PANDAS' : 'SQL');
+const tagOf = m => (m === 'py' ? 'pandas' : m === 'both' ? 'SQL · pandas' : 'SQL');
 const clsOf = m => (m === 'py' ? 't-py' : 't-sql');
 
 // 分步动画：steps = [{html, cap}]
@@ -126,7 +126,7 @@ VIZ.filter = (el, d) => {
     { html: row(col(py ? 'df' : 'users', base)), cap: py ? '要找“北京且年龄大于 25”的人。pandas 的思路：先算出一列 True/False（布尔序列），再用它去“筛”DataFrame。' : "要找“北京且年龄大于 25”的人：<code>SELECT * FROM users WHERE city = '北京' AND age > 25</code>。WHERE 会对<b>每一行</b>判断条件是否成立。" },
     { html: row(col(py ? 'df' : 'users', base), col(py ? 'm1' : '条件1', flag(L1, c1))), cap: `条件 1：<code>${vesc(L1)}</code>，逐行得到${py ? ' True / False' : '成立 ✓ / 不成立 ✗'}。` },
     { html: row(col(py ? 'df' : 'users', base), col(py ? 'm1' : '条件1', flag(L1, c1)), col(py ? 'm2' : '条件2', flag(L2, c2))), cap: `条件 2：<code>${vesc(L2)}</code>。` },
-    { html: row(col(py ? 'df' : 'users', base), col(py ? 'm1' : '条件1', flag(L1, c1)), col(py ? 'm2' : '条件2', flag(L2, c2)), col('两者都满足', flag(L3, both))), cap: py ? '用 <code>&</code>（且）、<code>|</code>（或）、<code>~</code>（非）组合条件。⚠️ 每个条件必须用<b>括号</b>包起来：<code>(df.city == \'北京\') & (df.age > 25)</code>。' : '<code>AND</code> 要求两个条件都成立；<code>OR</code> 只要一个成立。混用时 AND 优先级更高，记得加括号。' },
+    { html: row(col(py ? 'df' : 'users', base), col(py ? 'm1' : '条件1', flag(L1, c1)), col(py ? 'm2' : '条件2', flag(L2, c2)), col('两者都满足', flag(L3, both))), cap: py ? '用 <code>&</code>（且）、<code>|</code>（或）、<code>~</code>（非）组合条件。注意：每个条件必须用<b>括号</b>包起来：<code>(df.city == \'北京\') & (df.age > 25)</code>。' : '<code>AND</code> 要求两个条件都成立；<code>OR</code> 只要一个成立。混用时 AND 优先级更高，记得加括号。' },
     { html: row(col(py ? 'df[m1 & m2]' : '结果', mini(['name', 'city', 'age'], data, { ix, rc: i => (both[i] ? 'hl' : 'fade') }))), cap: py ? '<code>df[m1 & m2]</code> 只保留 True 对应的行。注意结果保留了原来的索引（0、2），不是重新编号。' : '只有两个条件都成立的行被保留下来，进入后续步骤。' },
   ];
   stepper(el, py ? '布尔索引：先算条件，再筛行' : 'WHERE：逐行判断条件', tagOf(m), steps, clsOf(m));
@@ -162,7 +162,7 @@ VIZ.join = (el, d) => {
     inner: '只保留两边<b>都能匹配上</b>的行。小王有 2 笔订单，所以出现 2 次——一对多连接会让行数“膨胀”，聚合时要当心重复计算。',
     left: '左表 users <b>全部保留</b>，右表匹配不上的列填空值。最常用的连接：例如“找出从没下过单的用户”= LEFT JOIN 后筛选 order_id 为空。',
     right: '右表 orders 全部保留。订单 104 的 user_id=5 在用户表里不存在，所以用户列为空。实际工作中一般交换两表位置写成 LEFT JOIN。',
-    full: '两边全部保留，匹配不上的一侧填空值。⚠️ MySQL 不支持 FULL JOIN，可用 <code>LEFT JOIN … UNION … RIGHT JOIN</code> 模拟；pandas 写 <code>how=\'outer\'</code>。',
+    full: '两边全部保留，匹配不上的一侧填空值。注意：MySQL 不支持 FULL JOIN，可用 <code>LEFT JOIN … UNION … RIGHT JOIN</code> 模拟；pandas 写 <code>how=\'outer\'</code>。',
   };
   const venn = t => {
     const L = t === 'left' || t === 'full', R = t === 'right' || t === 'full';
@@ -250,7 +250,7 @@ VIZ.lag = (el, d) => {
   const steps = [
     { html: mini(['month', 'gmv'], mon.map((x, i) => [x, g[i]])), cap: '想算<b>环比增长率</b> =（本月 − 上月）/ 上月。难点在于：“上月”的值在<b>上一行</b>，怎么把它拿到当前行？' },
     { html: code2('LAG(gmv) OVER (ORDER BY month) AS prev', "df['prev'] = df['gmv'].shift(1)") + mini(['month', 'gmv', 'prev'], mon.map((x, i) => [x, g[i], prev[i]]), { nul, cc: (i, j) => (j === 2 ? 'new sel' : i < 3 && j === 1 ? 'sel' : '') }), cap: `<b>${py ? 'shift(1)' : 'LAG'}</b> 把整列<b>向下错开一行</b>：每一行都拿到了上一行的值。第一行没有“上个月”，所以是 ${nul}。` },
-    { html: code2('(gmv - prev) * 1.0 / prev AS mom', "df['mom'] = df['gmv'].pct_change()") + mini(['month', 'gmv', 'prev', '环比'], mon.map((x, i) => [x, g[i], prev[i], mom[i] == null ? null : pct(mom[i])]), { nul, cc: (i, j) => (j === 3 && mom[i] != null ? (mom[i] < 0 ? 'bad' : 'good') : '') }), cap: `同一行里有了本月和上月，相除即可。pandas 的 <code>pct_change()</code> 一步到位。${py ? '' : '⚠️ SQLite 整数相除会取整，记得乘 1.0。'}` },
+    { html: code2('(gmv - prev) * 1.0 / prev AS mom', "df['mom'] = df['gmv'].pct_change()") + mini(['month', 'gmv', 'prev', '环比'], mon.map((x, i) => [x, g[i], prev[i], mom[i] == null ? null : pct(mom[i])]), { nul, cc: (i, j) => (j === 3 && mom[i] != null ? (mom[i] < 0 ? 'bad' : 'good') : '') }), cap: `同一行里有了本月和上月，相除即可。pandas 的 <code>pct_change()</code> 一步到位。${py ? '' : '注意：SQLite 整数相除会取整，记得乘 1.0。'}` },
     { html: code2('LEAD(gmv) OVER (ORDER BY month) AS next', "df['next'] = df['gmv'].shift(-1)") + mini(['month', 'gmv', 'next'], mon.map((x, i) => [x, g[i], next[i]]), { nul, cc: (i, j) => (j === 2 ? 'new sel' : '') }), cap: `反过来，<b>${py ? 'shift(-1)' : 'LEAD'}</b> 向上错一行，拿到<b>下一行</b>的值，常用于计算“距离下次购买的天数”。` },
   ];
   stepper(el, py ? 'shift：拿到上一行的值' : 'LAG / LEAD：拿到上一行的值', tagOf(m), steps, clsOf(m));
@@ -297,12 +297,12 @@ VIZ.nullcount = el => {
   const t = (rc, cc, extraCol) => mini(['user_id', 'age', ...(extraCol ? [extraCol[0]] : [])], ids.map((id, i) => [id, ages[i], ...(extraCol ? [extraCol[1][i]] : [])]), { rc, cc });
   const isNull = i => ages[i] === null;
   const opt = (label, sql, py, table, val, cap) => ({ label, html: code2(sql, py) + row(table, arrow(), `<div class="flow-box on">结果<br><span class="bigval">${val}</span></div>`), cap });
-  chooser(el, 'NULL 让很多函数“行为不同”', 'SQL · PANDAS', [
+  chooser(el, 'NULL 让很多函数“行为不同”', 'SQL · pandas', [
     opt('COUNT(*)', 'SELECT COUNT(*) FROM t', 'len(df)', t(() => 'hl'), 6, '<code>COUNT(*)</code> 数的是<b>行数</b>，不管有没有 NULL。'),
     opt('COUNT(age)', 'SELECT COUNT(age) FROM t', "df['age'].count()", t(i => (isNull(i) ? 'fade' : 'hl')), 4, '<code>COUNT(列)</code> 只数<b>非空值</b>，NULL 被跳过。'),
     opt('COUNT(DISTINCT)', 'SELECT COUNT(DISTINCT age) FROM t', "df['age'].nunique()", t(i => (isNull(i) || i === 3 ? 'fade' : 'hl')), 3, '<code>COUNT(DISTINCT 列)</code>：先去重（两个 30 算一个），也不计 NULL。'),
     opt('AVG(age)', 'SELECT AVG(age) FROM t', "df['age'].mean()", t(i => (isNull(i) ? 'fade' : 'hl')), 31.5, '聚合函数<b>忽略 NULL</b>：AVG = (25+30+30+41) / <b>4</b> = 31.5，而不是除以 6。如果业务上空值应当算 0，要先 <code>COALESCE(age, 0)</code>。'),
-    opt('= NULL ✗', 'SELECT * FROM t WHERE age = NULL', "df[df['age'] == np.nan]", t(() => 'fade'), '0 行', '⚠️ 任何值和 NULL 比较（=、<>、>）结果都是“未知”，<b>永远不成立</b>。pandas 中 NaN == NaN 也是 False。'),
+    opt('= NULL ✗', 'SELECT * FROM t WHERE age = NULL', "df[df['age'] == np.nan]", t(() => 'fade'), '0 行', '注意：任何值和 NULL 比较（=、<>、>）结果都是“未知”，<b>永远不成立</b>。pandas 中 NaN == NaN 也是 False。'),
     opt('IS NULL ✓', 'SELECT * FROM t WHERE age IS NULL', "df[df['age'].isna()]", t(i => (isNull(i) ? 'hl' : 'fade')), '2 行', '判断空值必须用 <code>IS NULL</code> / <code>IS NOT NULL</code>，pandas 用 <code>isna()</code> / <code>notna()</code>。'),
     opt('COALESCE', 'SELECT COALESCE(age, 0) FROM t', "df['age'].fillna(0)", t(null, (i, j) => (j === 2 && isNull(i) ? 'good' : ''), ['填充后', ages.map(a => a ?? 0)]), '空 → 0', '<code>COALESCE(a, b, …)</code> 返回第一个非空的参数，MySQL 也可用 <code>IFNULL(a, 0)</code>。'),
   ], 't-sql');
@@ -314,7 +314,7 @@ VIZ.anatomy = el => {
   const cols = ['user_id', 'city', 'age'];
   const t = (o = {}) => mini(cols, data, { ix: [0, 1, 2, 3], ...o });
   const opt = (label, code, o, cap) => ({ label, html: `<pre class="qcode">${vesc(code)}</pre><div style="height:10px"></div>` + t(o), cap });
-  chooser(el, 'DataFrame 的组成', 'PANDAS', [
+  chooser(el, 'DataFrame 的组成', 'pandas', [
     opt('整体', 'df  # 一张二维表', {}, '<b>DataFrame</b> = 带标签的二维表。左边灰色的是<b>行索引 index</b>，上面是<b>列名 columns</b>，中间是<b>数据 values</b>。'),
     opt('index', 'df.index   # RangeIndex(start=0, stop=4)', { ixc: () => 'sel', ihc: 'sel' }, '<b>index（行索引）</b>：每一行的“名字”。默认是 0、1、2…，也可以是日期、用户 ID 等。筛选、分组后索引会保留原值。'),
     opt('columns', "df.columns  # ['user_id', 'city', 'age']", { hc: () => 'sel' }, '<b>columns（列名）</b>：每一列的名字，用 <code>df[\'列名\']</code> 访问。'),
@@ -337,8 +337,8 @@ VIZ.locidx = el => {
     cap,
   });
   const all = () => true;
-  chooser(el, 'loc 按标签，iloc 按位置', 'PANDAS', [
-    opt('df.loc[11:13]', i => i >= 1 && i <= 3, all, '<code>loc</code> 用<b>索引标签</b>：取标签 11 到 13 的行。⚠️ loc 的切片<b>包含两端</b>。'),
+  chooser(el, 'loc 按标签，iloc 按位置', 'pandas', [
+    opt('df.loc[11:13]', i => i >= 1 && i <= 3, all, '<code>loc</code> 用<b>索引标签</b>：取标签 11 到 13 的行。注意：loc 的切片<b>包含两端</b>。'),
     opt('df.iloc[1:3]', i => i >= 1 && i < 3, all, '<code>iloc</code> 用<b>位置编号</b>（从 0 开始）：取第 1、2 行，<b>不含 3</b>——和 Python 列表切片一样左闭右开。'),
     opt("df.loc[:, ['city', 'age']]", all, j => j < 2, '逗号前选行、逗号后选列；<code>:</code> 表示全部。'),
     opt('df.iloc[0:2, 1:3]', i => i < 2, j => j >= 1, '前两行 × 第 1、2 列（age、channel）。'),
@@ -355,7 +355,7 @@ VIZ.missing = el => {
   const nn = (i, j) => D[i][j] === null;
   const base = o => mini(cols, D, { ix, nul: 'NaN', cc: (i, j) => (nn(i, j) ? 'bad' : ''), ...o });
   const opt = (code, html, cap) => ({ label: code.replace(/^df\./, ''), html: `<pre class="qcode">${vesc(code)}</pre><div style="height:10px"></div>` + html, cap });
-  chooser(el, '缺失值与重复值处理', 'PANDAS', [
+  chooser(el, '缺失值与重复值处理', 'pandas', [
     opt('df', base(), '红色格子是缺失值 NaN。真实数据几乎都有缺失和重复，分析前必须先处理。'),
     opt('df.isna()', mini(cols, D.map(r => r.map(v => (v === null ? 'True' : 'False'))), { ix, cc: (i, j) => (nn(i, j) ? 'bad' : '') }), '<code>isna()</code> 把每个格子变成 True（缺失）/ False。'),
     opt('df.isna().sum()', mini(['列', '缺失数'], cols.map((c, j) => [c, D.filter(r => r[j] === null).length]), { cc: (i, j) => (j === 1 && i > 0 ? 'bad' : '') }), '<code>isna().sum()</code>：True 当 1 加起来 = <b>每列缺失个数</b>，最常用的一行检查代码。'),
@@ -378,14 +378,14 @@ VIZ.transform = el => {
     { html: code2('SUM(amount) OVER (PARTITION BY city)', "df.groupby('city')['amount'].transform('sum')") + mini(['city', 'amount', 'total'], D.map(r => [...r, tot[r[0]]]), { rc: gc, cc: (i, j) => (j === 2 ? 'new' : '') }), cap: '<b>transform</b>：每组算出的值<b>广播回组内每一行</b>，结果和原表等长，可以直接作为新列——相当于 SQL 的窗口函数。' },
     { html: code2('amount * 1.0 / SUM(amount) OVER (PARTITION BY city)', "df['share'] = df['amount'] / df['total']") + mini(['city', 'amount', 'total', 'share'], D.map(r => [...r, tot[r[0]], pct(r[1] / tot[r[0]])]), { rc: gc, cc: (i, j) => (j === 3 ? 'new' : '') }), cap: '逐行相除得到占比。<b>组内占比、与组均值的差、组内标准化</b>都是这个套路。' },
   ];
-  stepper(el, 'agg 压缩 vs transform 广播', 'PANDAS', steps, 't-py');
+  stepper(el, 'agg 压缩 vs transform 广播', 'pandas', steps, 't-py');
 };
 
 /* ---------- 15. concat ---------- */
 VIZ.concat = el => {
   const A = [[1, '1月', 100], [2, '1月', 80]], B = [[3, '2月', 120], [4, '2月', 90]];
   const cols = ['order_id', 'month', 'amount'];
-  chooser(el, '拼接：上下拼 vs 左右拼', 'SQL · PANDAS', [
+  chooser(el, '拼接：上下拼 vs 左右拼', 'SQL · pandas', [
     { label: '上下拼接', html: code2('SELECT * FROM jan UNION ALL SELECT * FROM feb', 'pd.concat([jan, feb], ignore_index=True)') + row(col('jan', mini(cols, A, { rc: () => 'grp1' })), col('feb', mini(cols, B, { rc: () => 'grp2' })), arrow(), col('结果', mini(cols, [...A, ...B], { ix: [0, 1, 2, 3], rc: i => (i < 2 ? 'grp1' : 'grp2') }))), cap: '把<b>列相同</b>的多张表上下堆叠，例如合并每个月导出的文件。<code>ignore_index=True</code> 重新编号索引，否则会出现 0、1、0、1。SQL 中 <code>UNION ALL</code> 保留重复行，<code>UNION</code> 会去重。' },
     { label: '左右拼接', html: code2(null, 'pd.concat([a, b], axis=1)') + row(col('a', mini(['city'], [['北京'], ['上海']], { ix: [0, 1], rc: () => 'grp1' })), col('b', mini(['users'], [[120], [95]], { ix: [0, 1], rc: () => 'grp2' })), arrow(), col('结果', mini(['city', 'users'], [['北京', 120], ['上海', 95]], { ix: [0, 1], cc: (i, j) => (j ? 'grp2' : 'grp1') }))), cap: '<code>axis=1</code> 按<b>索引对齐</b>左右拼接。按某个键列匹配时请用 <code>merge</code>，更安全。' },
   ], 't-py');
@@ -404,7 +404,7 @@ VIZ.rolling = (el, d) => {
       cap: k < 2 ? `第 ${k + 1} 天：窗口需要 3 天数据，目前不足 → pandas 给 NaN。` : `第 ${k + 1} 天：窗口 = 第 ${k - 1}~${k + 1} 天 → (${s.slice(k - 2, k + 1).join(' + ')}) / 3 = <b>${ma[k].toFixed(2)}</b>`,
     });
   });
-  steps.push({ html: code + mini(['day', 'sales', 'MA3'], s.map((v, i) => [i + 1, v, ma[i] == null ? null : ma[i].toFixed(2)]), { nul: 'NaN' }), cap: '窗口像一个固定大小的框，每次向下滑一格。移动平均能<b>平滑日常波动</b>，看清趋势。⚠️ SQL 的 ROWS 窗口在前两天会用“不足 3 天”的数据直接计算（10、12），而 pandas 默认给 NaN（可用 <code>min_periods=1</code> 改变）。' });
+  steps.push({ html: code + mini(['day', 'sales', 'MA3'], s.map((v, i) => [i + 1, v, ma[i] == null ? null : ma[i].toFixed(2)]), { nul: 'NaN' }), cap: '窗口像一个固定大小的框，每次向下滑一格。移动平均能<b>平滑日常波动</b>，看清趋势。注意：SQL 的 ROWS 窗口在前两天会用“不足 3 天”的数据直接计算（10、12），而 pandas 默认给 NaN（可用 <code>min_periods=1</code> 改变）。' });
   stepper(el, '移动平均：滑动的窗口', tagOf(m), steps, clsOf(m));
 };
 
@@ -424,7 +424,7 @@ VIZ.streak = el => {
     { html: mini(H, rows(3), { rc: gc }), cap: '③ 差值相同的行就是同一段连续登录：12-31 一段（3 天）、01-01 一段（2 天）、01-02 一段（1 天）。' },
     { html: row(col('按 (user_id, grp) 分组计数', mini(['grp', '起', '止', '连续天数'], [['12-31', '01-01', '01-03', 3], ['01-01', '01-05', '01-06', 2], ['01-02', '01-08', '01-08', 1]], { rc: i => ['grp1', 'grp2', 'grp3'][i], cc: (i, j) => (j === 3 && i === 0 ? 'good' : '') }))), cap: '④ 按 (user_id, grp) 分组 COUNT 即得每段的天数，再取 MAX 就是<b>最长连续登录天数 = 3</b>。这个套路也适用于“连续 N 天下单”“连续 N 个月增长”等问题。' },
   ];
-  stepper(el, '连续登录：日期 − 行号 的妙用', 'SQL · PANDAS', steps, 't-sql');
+  stepper(el, '连续登录：日期 − 行号 的妙用', 'SQL · pandas', steps, 't-sql');
 };
 
 /* ---------- 18. 留存矩阵 ---------- */
@@ -432,7 +432,7 @@ VIZ.retention = el => {
   const L = [['u1', '01-01', 0], ['u1', '01-02', 1], ['u1', '01-08', 7], ['u2', '01-01', 0], ['u2', '01-03', 2], ['u3', '01-02', 0], ['u3', '01-03', 1], ['u3', '01-04', 2], ['u4', '01-02', 0]];
   const first = { u1: '01-01', u2: '01-01', u3: '01-02', u4: '01-02' };
   const gc = i => (first[L[i][0]] === '01-01' ? 'grp1' : 'grp2');
-  const heat = v => `background:color-mix(in srgb, var(--g2) ${Math.round(v * 70)}%, transparent)`;
+  const heat = v => `background:color-mix(in srgb, var(--accent) ${Math.round(v * 45)}%, transparent)`;
   const mat = [['01-01', 2, 1, 1, 1], ['01-02', 2, 1, 1, 0]];
   const rate = mat.map(r => [r[0], ...r.slice(1).map(v => v / r[1])]);
   const heatTable = `<table class="mini"><thead><tr><th>首日</th><th>第0天</th><th>第1天</th><th>第2天</th><th>第7天</th></tr></thead><tbody>${rate.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td style="${heat(v)}">${pct(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -443,7 +443,7 @@ VIZ.retention = el => {
     { html: code2("COUNT(DISTINCT CASE WHEN day_n = 1 THEN user_id END)", "pivot_table(index='first_day', columns='day_n', values='user_id', aggfunc='nunique')") + mini(['首日', '第0天', '第1天', '第2天', '第7天'], mat, { cc: (i, j) => (j === 1 ? 'hl' : '') }), cap: '③ 按“首日 × day_n”统计去重人数。第 0 天的人数就是该批次的<b>新增用户数</b>。' },
     { html: heatTable, cap: '④ 每一格除以第 0 天人数，得到<b>留存率矩阵</b>（颜色越深留存越高）。横向看一批用户随时间的流失，纵向比较不同批次的质量。' },
   ];
-  stepper(el, '留存率是怎么算出来的', 'SQL · PANDAS', steps, 't-case');
+  stepper(el, '留存率是怎么算出来的', 'SQL · pandas', steps, 't-case');
 };
 
 /* ---------- 19. RFM ---------- */
@@ -460,7 +460,7 @@ VIZ.rfm = el => {
     { html: mini(['用户', 'R', 'F', 'M', '分群'], U.map(r => [r[0], ...code(r).split(''), names[code(r)]]), { cc: (i, j) => (j >= 1 && j <= 3 ? (code(U[i])[j - 1] === '1' ? 'good' : 'bad') : j === 4 ? 'hl' : '') }), cap: '三个 0/1 组合成 8 种用户类型，每种对应不同的运营策略。' },
     { html: mini(['R', 'F', 'M', '用户类型', '运营策略'], [['1', '1', '1', '重要价值', '重点维护，提供 VIP 服务'], ['0', '1', '1', '重要保持', '最近没来了，主动召回'], ['1', '0', '1', '重要发展', '买得多但不常来，提高频次'], ['0', '0', '1', '重要挽留', '高价值但快流失，重点挽留'], ['1', '1', '0', '一般价值', '活跃但客单低，推荐升级'], ['1', '0', '0', '一般发展', '新客，引导复购'], ['0', '1', '0', '一般保持', '低价值，低成本维护'], ['0', '0', '0', '一般挽留', '基本流失，可放弃']], { cc: (i, j) => (j === 3 ? (i < 4 ? 'good' : 'hl') : '') }), cap: '经典 8 分群对照表。实际工作中也常用分位数打 1~5 分，思路相同。' },
   ];
-  stepper(el, 'RFM 用户分层', 'SQL · PANDAS', steps, 't-case');
+  stepper(el, 'RFM 用户分层', 'SQL · pandas', steps, 't-case');
 };
 
 /* ---------- 20. 分箱 pd.cut ---------- */
@@ -479,11 +479,12 @@ VIZ.cut = el => {
     { html: code2(null, "pd.cut(df['age'], bins=[17, 24, 34, 44, 55], labels=['18-24', '25-34', '35-44', '45-55'])") + svgLine(true), cap: '<code>bins</code> 给出切分点，默认区间<b>左开右闭</b>：(17, 24] 即 18~24 岁。每个值落入对应区间，得到标签。' },
     { html: code2("CASE WHEN age <= 24 THEN '18-24' WHEN age <= 34 THEN '25-34' … END", ".value_counts().sort_index()") + svgLine(true) + mini(['年龄段', '人数'], cnt, { cc: (i) => `grp${i + 1}` }), cap: '再 <code>value_counts()</code> 就是年龄段分布。SQL 中用 CASE WHEN 实现同样的分箱；想按数量等分可用 <code>pd.qcut</code>。' },
   ];
-  stepper(el, '分箱：把连续值切成区间', 'PANDAS', steps, 't-py');
+  stepper(el, '分箱：把连续值切成区间', 'pandas', steps, 't-py');
 };
 
 /* ================= 结果图表 ================= */
-const CH_COLORS = ['var(--g1)', 'var(--g2)', 'var(--g3)', 'var(--g4)', 'var(--g5)'];
+// 一图一个强调色：要看的那条线 / 那根柱用墨水蓝，其余中性灰
+const ACC = 'var(--accent)', NEU = ['var(--chart-2)', 'var(--chart-3)'];
 function niceTicks(lo, hi, n = 5) {
   if (lo === hi) hi = lo + 1;
   const raw = (hi - lo) / n, mag = 10 ** Math.floor(Math.log10(raw));
@@ -494,7 +495,7 @@ function niceTicks(lo, hi, n = 5) {
 }
 function fmtNum(v, ratio) {
   if (v == null || isNaN(v)) return '';
-  if (ratio) return (v * 100).toFixed(Math.abs(v) < 0.1 ? 1 : 0) + '%';
+  if (ratio) return (v * 100).toFixed(Math.abs(v) < 0.1 && v !== 0 ? 1 : 0) + '%';
   const a = Math.abs(v);
   if (a >= 1e8) return (v / 1e8).toFixed(1) + '亿';
   if (a >= 1e4) return +(v / 1e4).toFixed(a >= 1e6 ? 0 : 1) + '万';
@@ -512,12 +513,12 @@ function renderChart(el, type, cols, rows) {
   const small = W < 480;
   const wrap = document.createElement('div'); wrap.className = 'chart chart-wrap'; el.append(wrap);
   const tip = document.createElement('div'); tip.className = 'chart-tip'; tip.hidden = true;
-  const legend = names => `<div class="chart-legend">${names.map((n, i) => `<span><i style="background:${CH_COLORS[i % 5]}"></i>${vesc(n)}</span>`).join('')}</div>`;
+  const legend = (names, colors) => `<div class="chart-legend">${names.map((n, i) => `<span><i style="background:${colors[i]}"></i>${vesc(n)}</span>`).join('')}</div>`;
 
   if (type === 'heat') {
     const all = series.flatMap(s => s.vals).filter(v => v != null);
     const max = Math.max(...all), ratio = isRatio(all);
-    const html = `<div class="result-wrap" style="max-height:none"><table class="mini" style="width:100%;border:0"><thead><tr><th>${vesc(cols[0])}</th>${series.map(s => `<th>${vesc(s.name)}</th>`).join('')}</tr></thead><tbody>${labels.map((l, i) => `<tr><td>${vesc(l)}</td>${series.map(s => { const v = s.vals[i]; return `<td style="${v == null ? '' : `background:color-mix(in srgb, var(--g2) ${Math.round(v / (max || 1) * 75)}%, transparent)`}">${v == null ? '' : fmtNum(v, ratio)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+    const html = `<div class="result-wrap" style="max-height:none"><table class="mini" style="width:100%;border:0"><thead><tr><th>${vesc(cols[0])}</th>${series.map(s => `<th>${vesc(s.name)}</th>`).join('')}</tr></thead><tbody>${labels.map((l, i) => `<tr><td>${vesc(l)}</td>${series.map(s => { const v = s.vals[i]; return `<td style="${v == null ? '' : `background:color-mix(in srgb, var(--accent) ${Math.round(v / (max || 1) * 50)}%, transparent)`}">${v == null ? '' : fmtNum(v, ratio)}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
     wrap.innerHTML = html;
     return;
   }
@@ -526,8 +527,8 @@ function renderChart(el, type, cols, rows) {
     let s = `<svg viewBox="0 0 ${W} ${H}">`;
     v.forEach((x, i) => {
       const w = (W - 40) * (x / max) * (small ? 0.62 : 0.7), cx = W / 2 - (small ? 40 : 60), y = 10 + i * (bh + 10);
-      s += `<rect x="${cx - w / 2}" y="${y}" width="${w}" height="${bh}" rx="8" style="fill:${CH_COLORS[i % 5]};opacity:.85"/>`;
-      s += `<text x="${cx}" y="${y + bh / 2 + 4}" text-anchor="middle" style="fill:#fff;font-weight:700;font-size:12px">${vesc(labels[i])} ${fmtNum(x)}</text>`;
+      s += `<rect x="${cx - w / 2}" y="${y}" width="${w}" height="${bh}" rx="6" style="fill:${ACC};opacity:${1 - i * 0.12}"/>`;
+      s += `<text x="${cx}" y="${y + bh / 2 + 4}" text-anchor="middle" style="fill:var(--on-accent);font:500 12px var(--font)">${vesc(labels[i])} ${fmtNum(x)}</text>`;
       if (i) s += `<text x="${W - 10}" y="${y + bh / 2 + 4}" text-anchor="end" class="val">${small ? '' : '转化 '}${pct(x / v[i - 1])}<tspan style="fill:var(--muted);font-weight:400"> / 总 ${pct(x / v[0])}</tspan></text>`;
     });
     wrap.innerHTML = s + '</svg>';
@@ -539,7 +540,7 @@ function renderChart(el, type, cols, rows) {
     v.forEach((x, i) => {
       const y = 5 + i * (bh + 6), w = (W - lw - 70) * ((x || 0) / (max || 1));
       const lab = labels[i].length > (small ? 7 : 12) ? labels[i].slice(0, small ? 7 : 12) + '…' : labels[i];
-      s += `<text x="${lw - 8}" y="${y + bh / 2 + 4}" text-anchor="end">${vesc(lab)}</text><rect x="${lw}" y="${y}" width="${Math.max(w, 1)}" height="${bh}" rx="5" style="fill:${CH_COLORS[0]};opacity:.85"/><text x="${lw + w + 6}" y="${y + bh / 2 + 4}" class="val">${fmtNum(x)}</text>`;
+      s += `<text x="${lw - 8}" y="${y + bh / 2 + 4}" text-anchor="end">${vesc(lab)}</text><rect x="${lw}" y="${y}" width="${Math.max(w, 1)}" height="${bh}" rx="4" style="fill:${i ? NEU[0] : ACC}"/><text x="${lw + w + 6}" y="${y + bh / 2 + 4}" class="val">${fmtNum(x)}</text>`;
     });
     wrap.innerHTML = s + '</svg>';
     return;
@@ -555,6 +556,7 @@ function renderChart(el, type, cols, rows) {
     const tot = series[0].vals.reduce((a, b) => a + (b || 0), 0); let c = 0;
     right = { name: '累计占比', vals: series[0].vals.map(v => (c += v || 0) / tot) };
   }
+  const leftColors = left.map((_, k) => ((type === 'line' || type === 'bar') && k === left.length - 1 ? ACC : NEU[k % 2]));
   const lv = left.flatMap(s => s.vals).filter(v => v != null);
   const lt = niceTicks(Math.min(0, ...lv), Math.max(...lv));
   const lr = isRatio(lv);
@@ -580,26 +582,26 @@ function renderChart(el, type, cols, rows) {
     if (dots) vals.forEach((v, i) => { if (v != null) o += `<circle cx="${xc(i)}" cy="${yf(v)}" r="3.2" style="fill:var(--surface);stroke:${color};stroke-width:2"/>`; });
     return o;
   };
-  if (type === 'line') left.forEach((sr, k) => { s += drawLine(sr.vals, y, CH_COLORS[k], n <= 40); });
+  if (type === 'line') left.forEach((sr, k) => { s += drawLine(sr.vals, y, leftColors[k], n <= 40); });
   else {
     const bw = Math.min(42, band * 0.72 / left.length);
     left.forEach((sr, k) => sr.vals.forEach((v, i) => {
       if (v == null) return;
       const x0 = xc(i) - bw * left.length / 2 + k * bw, y0 = y(Math.max(0, v)), h = Math.abs(y(v) - y(0));
-      s += `<rect x="${x0 + 1}" y="${y0}" width="${Math.max(bw - 2, 1)}" height="${Math.max(h, 0.5)}" rx="3" style="fill:${CH_COLORS[type === 'bar' ? k : 0]};opacity:.88"/>`;
+      s += `<rect x="${x0 + 1}" y="${y0}" width="${Math.max(bw - 2, 1)}" height="${Math.max(h, 0.5)}" rx="2" style="fill:${leftColors[k]}"/>`;
       if (n * left.length <= 12 && !small) s += `<text x="${x0 + bw / 2}" y="${y0 - 5}" text-anchor="middle" class="val">${fmtNum(v, lr)}</text>`;
     }));
     if (right) {
-      if (type === 'pareto') s += `<line x1="${mL}" x2="${W - mR}" y1="${ry(0.8)}" y2="${ry(0.8)}" style="stroke:var(--bad);stroke-dasharray:5 4"/><text x="${W - mR - 4}" y="${ry(0.8) - 5}" text-anchor="end" style="fill:var(--bad)">80%</text>`;
-      s += drawLine(right.vals, ry, CH_COLORS[type === 'pareto' ? 2 : 1], n <= 40);
+      if (type === 'pareto') s += `<line x1="${mL}" x2="${W - mR}" y1="${ry(0.8)}" y2="${ry(0.8)}" style="stroke:var(--faint);stroke-dasharray:4 4"/><text x="${W - mR - 4}" y="${ry(0.8) - 5}" text-anchor="end" style="fill:var(--faint)">80%</text>`;
+      s += drawLine(right.vals, ry, ACC, n <= 40);
     }
   }
   s += `<line class="guide" x1="0" x2="0" y1="${mT}" y2="${mT + ph}" style="stroke:var(--faint);stroke-dasharray:3 3;display:none"/>`;
   s += `<rect class="hit" x="${mL}" y="${mT}" width="${pw}" height="${ph}" fill="transparent"/></svg>`;
-  wrap.innerHTML = s + legend([...left.map(x => x.name), ...(right ? [right.name] : [])]);
+  wrap.innerHTML = s + legend([...left.map(x => x.name), ...(right ? [right.name] : [])], [...leftColors, ACC]);
   wrap.append(tip);
   const svgEl = wrap.querySelector('svg'), guide = svgEl.querySelector('.guide');
-  const all = [...left.map((sr, k) => ({ ...sr, r: lr, c: CH_COLORS[type === 'bar' ? k : type === 'line' ? k : 0] })), ...(right ? [{ ...right, r: rr, c: CH_COLORS[type === 'pareto' ? 2 : 1] }] : [])];
+  const all = [...left.map((sr, k) => ({ ...sr, r: lr, c: leftColors[k] })), ...(right ? [{ ...right, r: rr, c: ACC }] : [])];
   const move = e => {
     const b = svgEl.getBoundingClientRect(), sx = (e.clientX - b.left) * W / b.width;
     const i = Math.max(0, Math.min(n - 1, Math.floor((sx - mL) / band)));
